@@ -4,7 +4,9 @@
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Subtitle Machine - AI Video Processing</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet"/>
   <script>
     tailwind.config = {
@@ -12,8 +14,8 @@
         extend: {
           colors: { 
             primary: { DEFAULT: '#003153', hover: '#001e33' },    /* 普鲁士蓝 */
-            gold: { DEFAULT: '#E3C78F', bg: '#F0C239', light: '#FAF7F2' }, /* 高亮明黄大背景 #F0C239 */
-            accent: { DEFAULT: '#85120F', hover: '#630d0b' }      /* 深红操作色 */
+            gold: { DEFAULT: '#E3C78F', bg: '#F0C239', light: '#FAF7F2' }, /* 将背景底色修改为高饱和度的 #F0C239 */
+            accent: { DEFAULT: '#85120F', hover: '#630d0b' }      /* 深红 */
           },
           fontFamily: { 
             sans: ['Inter', 'sans-serif'], 
@@ -25,26 +27,25 @@
     }
   </script>
   <style data-purpose="custom-layouts">
-    /* 主上传区虚线边框：普鲁士蓝 */
+    /* 主上传区边框：普鲁士蓝 */
     .dashed-border { background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23003153' stroke-width='1.5' stroke-dasharray='10%2c 10' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e"); border-radius: 16px; transition: all 0.3s ease;}
-    /* 预览区虚线边框：沙金 */
+    /* 预览区边框：沙金 */
     .dashed-border-gold { background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23E3C78F' stroke-width='1.5' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e"); border-radius: 16px; }
     
-    /* 核心处理按钮深红柔光阴影 */
+    /* 按钮阴影：深红柔光 */
     .glow-button { box-shadow: 0 12px 30px -10px rgba(133, 18, 15, 0.5); }
     
-    /* 自定义滑动开关（未激活沙金，激活深红） */
+    /* 自定义切换开关 */
     .switch { position: relative; display: inline-block; width: 48px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E3C78F; transition: .4s; border-radius: 24px; }
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #85120F; }
+    input:checked + .slider { background-color: #85120F; } /* 激活状态为深红 */
     input:checked + .slider:before { transform: translateX(24px); }
     
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-thumb { background: #E3C78F; border-radius: 4px; }
     
-    /* 大风车自转动画 */
     .animate-spin-smooth { animation: spin 2s linear infinite; }
   </style>
 </head>
@@ -61,6 +62,221 @@
 
   <main class="flex-1 max-w-5xl mx-auto w-full p-8">
     
+    <!-- Upload Section -->
     <section id="upload-box" class="dashed-border bg-white p-12 flex flex-col items-center justify-center text-center space-y-4 shadow-sm mb-8">
       <div class="w-16 h-16 bg-gold-light text-primary rounded-2xl flex items-center justify-center border border-gold/50">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 0l-3 3m3-3l3 3m-9 5a5 5 0 0 1 0-10 5 5 0 0 1 10 0 5 5 0 0 1 0 10"></path></svg>
+      </div>
+      <div class="space-y-2">
+        <h2 id="upload-title" class="text-2xl font-bold text-primary">Upload Video or Audio</h2>
+        <p id="upload-desc" class="text-primary/60 max-w-md">Drag and drop file (MP4, MOV, M4A, MP3) or click Select</p>
+        <p class="text-[11px] font-bold text-accent bg-accent/10 px-3 py-1 rounded-full inline-block mt-2">
+          Recommended: Upload files smaller than 25MB for Groq LPU processing.
+        </p>
+      </div>
+      <input type="file" id="file-input" accept="video/*,audio/*" class="hidden" />
+      <button onclick="document.getElementById('file-input').click()" class="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-12 rounded-xl transition-all active:scale-95">Select File</button>
+    </section>
+
+    <!-- Settings Row -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-custom border border-gold/40 shadow-sm space-y-6">
+        <div class="flex items-center justify-between">
+          <div><h3 class="font-bold text-primary">Fast Denoise</h3><p class="text-xs text-primary/50">Reduce background noise automatically</p></div>
+          <label class="switch"><input type="checkbox" id="toggle-denoise"/><span class="slider"></span></label>
+        </div>
+        <div class="flex items-center justify-between border-t border-gold-light pt-4">
+          <div><h3 class="font-bold text-primary">Auto Master</h3><p class="text-xs text-primary/50">LUFS normalization (-14.0)</p></div>
+          <label class="switch"><input type="checkbox" id="toggle-master"/><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-custom border border-gold/40 shadow-sm space-y-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2 text-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <h3 class="font-bold">SRT Subtitles</h3>
+          </div>
+          <input checked type="checkbox" id="toggle-srt" class="w-5 h-5 text-accent border-gold rounded-md focus:ring-accent" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-primary/50 uppercase tracking-wider">Whisper Model</label>
+            <select id="select-model" class="w-full bg-gold-light border-transparent rounded-lg text-sm py-2 px-3 focus:ring-accent focus:border-accent text-primary font-medium">
+              <option value="tiny">Tiny (Fastest)</option>
+              <option value="base">Base</option>
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large-v2">Large-v2</option>
+              <option value="large-v3" selected>Large-v3 (Groq)</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-primary/50 uppercase tracking-wider">Language</label>
+            <select id="select-lang" class="w-full bg-gold-light border-transparent rounded-lg text-sm py-2 px-3 focus:ring-accent focus:border-accent text-primary font-medium">
+              <option value="auto">Auto Detect</option>
+              <option value="zh">Chinese (中文)</option>
+              <option value="en">English</option>
+              <option value="ja">Japanese (日本語)</option>
+              <option value="ko">Korean (한국어)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Start Button (大风车动效，专属深红强调) -->
+    <div class="flex justify-center py-24">
+      <button id="start-btn" class="glow-button bg-accent hover:bg-accent-hover text-white flex items-center justify-center px-16 py-4 rounded-2xl font-bold transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-90 disabled:cursor-wait origin-center w-64 h-16">
+        <span id="btn-text" class="tracking-wide text-lg">Start Processing</span>
+      </button>
+    </div>
+
+    <!-- Output Preview & SRT -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold text-primary/60 uppercase tracking-widest">Source Preview</h3>
+        <div class="dashed-border-gold bg-white h-64 flex flex-col items-center justify-center relative overflow-hidden text-primary/40">
+          <div id="video-placeholder" class="flex flex-col items-center">
+            <svg class="w-10 h-10 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path></svg>
+            <span class="text-sm mt-2 font-medium">Waiting for upload...</span>
+          </div>
+          <video id="video-player" controls class="absolute inset-0 w-full h-full hidden bg-black/5 rounded-xl object-contain"></video>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-primary/60 uppercase tracking-widest">Output SRT</h3>
+          <button id="download-srt-btn" class="hidden flex items-center gap-1.5 text-[10px] font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors active:scale-95">
+            Download .SRT
+          </button>
+        </div>
+        <div id="srt-container" class="dashed-border-gold bg-white h-64 flex flex-col items-center justify-center relative">
+          <div id="srt-placeholder" class="text-primary/40 text-sm font-medium">No subtitle yet</div>
+          <textarea id="srt-output" readonly class="absolute inset-0 w-full h-full p-4 text-sm font-mono text-primary bg-transparent resize-none focus:outline-none hidden rounded-xl"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process Logs (普鲁士蓝底色 + 沙金文字的复古终端感) -->
+    <section class="space-y-3 pb-16">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-primary/60 uppercase tracking-widest">Process Logs</h3>
+        <div class="flex items-center gap-2 text-[10px] font-bold text-primary/60">
+          <span id="status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse transition-colors"></span> 
+          <span id="status-text">Ready for input</span>
+        </div>
+      </div>
+      <div id="log-box" class="bg-primary rounded-xl p-6 font-mono text-sm text-gold h-48 overflow-y-auto space-y-1 shadow-inner border border-primary-hover">
+        <div class="flex gap-4"><span class="text-gold/50">[System]</span><span>API Connection Ready.</span></div>
+        <div id="log-cursor" class="pt-2 text-gold opacity-60 animate-pulse">&gt; _</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById('file-input'), uploadTitle = document.getElementById('upload-title');
+    const startBtn = document.getElementById('start-btn'), btnText = document.getElementById('btn-text');
+    const videoPlayer = document.getElementById('video-player'), videoPlaceholder = document.getElementById('video-placeholder');
+    const srtOutput = document.getElementById('srt-output'), srtPlaceholder = document.getElementById('srt-placeholder'), downloadSrtBtn = document.getElementById('download-srt-btn');
+    const logBox = document.getElementById('log-box'), logCursor = document.getElementById('log-cursor');
+    const statusDot = document.getElementById('status-dot'), statusText = document.getElementById('status-text');
+
+    const API_ENDPOINT = "https://yiningzhang1109-subtitle-machine-api.hf.space/process"; 
+
+    function appendLog(msg, isErr = false) {
+      const line = document.createElement('div');
+      line.className = 'flex gap-4';
+      line.innerHTML = `<span class="text-gold/50">[${new Date().toLocaleTimeString('en-GB')}]</span><span class="${isErr ? 'text-red-400 font-bold' : 'text-gold'}">${msg}</span>`;
+      logBox.insertBefore(line, logCursor);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function setStatus(state) {
+      const states = { ready: ['bg-emerald-500 animate-pulse', 'Ready for input'], processing: ['bg-amber-400 animate-bounce', 'Processing Data...'], error: ['bg-red-500', 'Error'] };
+      statusDot.className = `w-2 h-2 rounded-full ${states[state][0]}`;
+      statusText.textContent = states[state][1];
+    }
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        uploadTitle.textContent = file.name;
+        appendLog(`File selected: ${file.name}`);
+        videoPlayer.src = URL.createObjectURL(file);
+        videoPlayer.classList.remove('hidden');
+        videoPlaceholder.classList.add('hidden');
+        setStatus('ready');
+      }
+    };
+
+    startBtn.onclick = async () => {
+      const file = fileInput.files[0];
+      if (!file) return alert("Select file first!");
+      
+      startBtn.disabled = true; 
+      btnText.textContent = "Processing"; 
+      startBtn.classList.add('animate-spin-smooth'); 
+      setStatus('processing');
+      
+      const config = { 
+        model: document.getElementById('select-model').value, 
+        language: document.getElementById('select-lang').value 
+      };
+
+      appendLog(`--- Started Processing ---`);
+      appendLog(`Model: ${config.model} | Lang: ${config.language}`);
+      
+      let simStep = 0;
+      const simMessages = [
+        "Initializing Groq LPU Connection...",
+        "Uploading payload to edge node...",
+        "Running speech recognition...",
+        "Aligning timestamps and formatting..."
+      ];
+      const progressSim = setInterval(() => {
+        if(simStep < simMessages.length) {
+          appendLog(`⚡ ${simMessages[simStep]}`);
+          simStep++;
+        }
+      }, 1500);
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("config", JSON.stringify(config));
+
+      try {
+        const resp = await fetch(API_ENDPOINT, { method: "POST", body: formData });
+        if (!resp.ok) throw new Error(await resp.text());
+        const data = await resp.json();
+        
+        clearInterval(progressSim); 
+        appendLog("✅ Done! Subtitles mapped successfully.");
+        
+        srtPlaceholder.classList.add('hidden'); 
+        srtOutput.classList.remove('hidden'); 
+        srtOutput.value = data.srt;
+        downloadSrtBtn.classList.remove('hidden'); 
+        setStatus('ready');
+      } catch (err) {
+        clearInterval(progressSim);
+        appendLog(`❌ Connection Error: ${err.message}`, true); 
+        setStatus('error');
+      } finally {
+        startBtn.disabled = false; 
+        btnText.textContent = "Start Processing";
+        startBtn.classList.remove('animate-spin-smooth'); 
+      }
+    };
+
+    downloadSrtBtn.onclick = () => {
+      const blob = new Blob([srtOutput.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${fileInput.files[0].name.split('.')[0]}_subtitle.srt`;
+      a.click();
+      appendLog(`💾 File saved locally.`);
+    };
+  </script>
+</body>
+</html>
